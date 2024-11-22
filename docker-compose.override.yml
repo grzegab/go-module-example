@@ -1,0 +1,33 @@
+services:
+  main:
+    container_name: ex_school
+    build:
+      target: local
+    working_dir: "/go/src/app/cmd/grpc"
+    volumes:
+      - "./go.mod:/go/src/app/go.mod"
+      - "./go.sum:/go/src/app/go.sum"
+      - "./cmd:/go/src/app/cmd"
+      - "./internal:/go/src/app/internal"
+      - "./pkg:/go/src/app/pkg"
+      - "./.env.local:/go/src/app/.env.local"
+
+  database:
+    container_name: ex_school_database
+    build:
+      context: .
+      target: base
+      dockerfile: ./docker/sql/Dockerfile
+    environment:
+      - POSTGRES_NAME=school
+      - POSTGRES_PASSWORD=secretpass
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=school
+    volumes:
+      - "./docker/sql/init.sql:/docker-entrypoint-initdb.d/init.sql"
+      - "./docker/sql/data:/var/lib/postgresql/data"
+    ports:
+      - "5433:5432"
+
+networks:
+  mm:

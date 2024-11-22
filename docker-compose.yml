@@ -1,0 +1,14 @@
+services:
+  main:
+    container_name: ex_school
+    ports:
+      - "50052:50051"
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    working_dir: /go/src
+    command:
+      - "/go/src/server"
+  db:
+    container_name: ex_school_database
+    image: postgres:latest
