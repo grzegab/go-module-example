@@ -14,7 +14,7 @@ func (app *Application) EventHandlers(m amqp.Delivery) {
 
 		return
 	}
-	ex := transport.NewExchange(app.RabbitDsn)
+	ex := transport.NewExchange(app.RabbitConn)
 
 	switch n {
 	case "NewUserWithBasicSchool":

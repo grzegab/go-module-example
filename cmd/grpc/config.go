@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/joho/godotenv"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
 	"os"
 )
@@ -12,6 +13,7 @@ import (
 type Application struct {
 	GrpcAddr        string
 	RabbitDsn       string
+	RabbitConn      *amqp.Connection
 	DbDsn           string
 	ListenPort      string
 	CommandQueue    string
@@ -30,6 +32,10 @@ func NewApplication() *Application {
 }
 
 var envLocal = ".env.local"
+
+func (app *Application) SetUpAmqpConn(conn *amqp.Connection) {
+	app.RabbitConn = conn
+}
 
 func (app *Application) UpdateConfig() error {
 	envPath := "../../" + envLocal

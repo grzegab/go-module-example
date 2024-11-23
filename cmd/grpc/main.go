@@ -15,15 +15,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	log.Println("[School] seting up rabbit connection...")
+	conn, closeConn, err := transport.MakeAmqpConnection(app.RabbitDsn)
+	if err != nil {
+		log.Println(err)
+		log.Println(err)
+		os.Exit(5)
+	}
+	defer closeConn()
+	app.SetUpAmqpConn(conn)
+
 	log.Println("[School] starting listening for rabbit commands calls...")
-	cq := transport.NewQueue(app.CommandQueue, app.RabbitDsn, app.CommandHandlers)
+	cq := transport.NewQueue(app.CommandQueue, app.RabbitConn, app.CommandHandlers)
 	if err := cq.Listen(); err != nil {
 		log.Println(err)
 		os.Exit(2)
 	}
 
 	log.Println("[School] starting listening for rabbit event calls...")
-	evq := transport.NewQueue(app.EventQueue, app.RabbitDsn, app.EventHandlers)
+	evq := transport.NewQueue(app.EventQueue, app.RabbitConn, app.EventHandlers)
 	if err := evq.Listen(); err != nil {
 		log.Println(err)
 		os.Exit(3)

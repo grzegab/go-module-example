@@ -32,14 +32,14 @@ func (m EventName) String() string {
 type Exchange struct {
 	Id   string
 	Name string
-	Dsn  string
+	Conn *amqp.Connection
 	Type EventName
 }
 
-func NewExchange(dsn string) *Exchange {
+func NewExchange(conn *amqp.Connection) *Exchange {
 	return &Exchange{
 		Name: "ex.events",
-		Dsn:  dsn,
+		Conn: conn,
 	}
 }
 
@@ -56,19 +56,12 @@ func NewEventData(name EventName, body []byte) *EventData {
 }
 
 func (e *Exchange) Publish(ev *EventData) error {
-	conn, err := amqp.Dial(e.Dsn)
-	if err != nil {
-		log.Printf("Failed to connect to RabbitMQ: %s", err)
-		return err
-	}
-	defer conn.Close()
-
-	ch, err := conn.Channel()
+	ch, closeCh, err := MakeChannel(e.Conn)
 	if err != nil {
 		log.Printf("Failed to open a channel: %s", err)
 		return err
 	}
-	defer ch.Close()
+	defer closeCh()
 
 	if err = ch.Publish(e.Name, "", true, false, amqp.Publishing{
 		MessageId: e.Id,

@@ -13,34 +13,27 @@ type HandleFunc func(m amqp.Delivery)
 
 type Queue struct {
 	Name    string
-	Dsn     string
+	Conn    *amqp.Connection
 	Handler func(m amqp.Delivery)
 }
 
-func NewQueue(name, dsn string, handler HandleFunc) *Queue {
+func NewQueue(name string, conn *amqp.Connection, handler HandleFunc) *Queue {
 	return &Queue{
 		Name:    name,
-		Dsn:     dsn,
+		Conn:    conn,
 		Handler: handler,
 	}
 }
 
 func (q *Queue) Listen() error {
-	conn, err := amqp.Dial(q.Dsn)
-	if err != nil {
-		log.Printf("Failed to connect to RabbitMQ: %s", err)
-		return err
-	}
-	defer conn.Close()
-
 	var forever chan struct{}
 	go func() {
-		ch, err := conn.Channel() // don't share channels between threads, each thread one channel
+		ch, closeCh, err := MakeChannel(q.Conn)
 		if err != nil {
 			log.Printf("Failed to open a channel: %s", err)
 			return
 		}
-		defer ch.Close()
+		defer closeCh()
 
 		msgs, err := ch.Consume(
 			q.Name, // queue
